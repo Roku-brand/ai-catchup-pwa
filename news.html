@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AIニュース | AI Catch-up Dashboard</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .news-controls {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .news-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    .news-tags .tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      margin-right: 4px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #3f5bd8;
+    }
+    .news-summary {
+      font-size: 13px;
+      color: #555;
+    }
+    .news-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .news-actions button {
+      border: none;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      background: #e5f0ff;
+    }
+    .news-full {
+      margin-top: 6px;
+      padding-top: 4px;
+      font-size: 12px;
+      color: #444;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI NEWS FEED</h1>
+  <p>外部ニュースAPIからAI関連ニュースを取得して表示します。</p>
+
+  <div class="news-controls">
+    <label><input type="checkbox" id="auto-refresh-toggle"> 自動更新（5分ごと）</label>
+    <button id="refresh-btn">今すぐ更新</button>
+  </div>
+
+  <div id="news-container"></div>
+
+  <script>
+    const API_ENDPOINT = "https://ai-catchup-pwa.vercel.app/api/news";
+    let autoRefreshTimer = null;
+
+    async function loadNews(showLoading = true) {
+      const container = document.getElementById("news-container");
+      if (!container) return;
+
+      if (showLoading) container.innerHTML = "<p>AIニュースを取得中...</p>";
+
+      try {
+        const res = await fetch(API_ENDPOINT);
+        if (!res.ok) throw new Error("API response not ok");
+        const newsList = await res.json();
+
+        if (!Array.isArray(newsList) || newsList.length === 0) {
+          container.innerHTML = "<p>現在表示できるニュースがありません。</p>";
+          return;
+        }
+
+        container.innerHTML = newsList
+          .map((item) => {
+            const title = escapeHtml(item.title);
+            const summary = escapeHtml(item.summary || "");
+            const source = escapeHtml(item.source || "");
+            const pubDate = escapeHtml(item.pubDate || "");
+            const category = escapeHtml(item.category || "");
+            const url = item.url || "#";
+
+            return `
+            <article class="news-card">
+              <div class="news-header">
+                <h3>${title}</h3>
+                <div class="news-tags">
+                  ${category ? `<span class="tag">#${category}</span>` : ""}
+                  ${source ? `<span class="tag">${source}</span>` : ""}
+                  ${pubDate ? `<span class="tag">${pubDate}</span>` : ""}
+                </div>
+              </div>
+              <p class="news-summary">
+                ${summary ? summary.slice(0, 150) + (summary.length > 150 ? "..." : "") : "本文要約は元記事で確認してください。"}
+              </p>
+              <div class="news-actions">
+                <button class="read-more-btn" data-full="${encodeURIComponent(summary)}">カード内で読む</button>
+                <a href="${url}" target="_blank" rel="noopener noreferrer">元記事を開く</a>
+              </div>
+              <div class="news-full" style="display:none;"></div>
+            </article>
+            `;
+          })
+          .join("");
+
+        container.querySelectorAll(".read-more-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const article = btn.closest(".news-card");
+            const full = article.querySelector(".news-full");
+            const text = decodeURIComponent(btn.dataset.full || "");
+
+            full.innerHTML = text
+              ? `<p>${escapeHtml(text)}</p>`
+              : "<p>本文情報がありません。元記事リンクからお読みください。</p>";
+
+            full.style.display = full.style.display === "none" || !full.style.display ? "block" : "none";
+          });
+        });
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p>ニュースの取得に失敗しました。時間をおいて再度お試しください。</p>";
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    document.getElementById("refresh-btn").addEventListener("click", () => {
+      loadNews(true);
+    });
+
+    document.getElementById("auto-refresh-toggle").addEventListener("change", (e) => {
+      if (e.target.checked) {
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        autoRefreshTimer = setInterval(() => loadNews(false), 5 * 60 * 1000);
+        loadNews(true);
+      } else {
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => loadNews(true));
+  </script>
+</body>
+</html>

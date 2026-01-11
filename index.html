@@ -1,2 +1,567 @@
-<!DOCTYPE html><html><body><h1>AI Catchup v3</h1></body></html>
-<!-- redeploy test -->
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Catchup | ダッシュボード</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --ink: #1f2a44;
+      --muted: #556070;
+      --accent: #3d6bff;
+      --accent-soft: #eef2ff;
+      --border: #e2e8f3;
+      --shadow: 0 10px 20px rgba(31, 42, 68, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans JP", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    header {
+      background: linear-gradient(135deg, #3d6bff, #6b8cff);
+      color: #fff;
+      padding: 28px 20px 40px;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 0 20px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      margin-top: -24px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .panel {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      margin-right: 6px;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .service-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .service-card header {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    .service-card h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .service-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .service-actions button,
+    .service-actions a,
+    .news-actions a,
+    .news-actions button {
+      border: none;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 999px;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .service-actions button.secondary {
+      background: #f4f6fb;
+      color: var(--muted);
+    }
+
+    .form-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-bottom: 10px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .news-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .news-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .news-item h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+
+    .news-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .news-actions {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pill {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f4f6fb;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI Catchup Dashboard</h1>
+    <p>分野別のAIサービスを整理し、毎日のニュース動向をまとめてチェック。</p>
+  </header>
+
+  <main>
+    <section class="grid">
+      <div class="panel">
+        <h2>AIサービスのカード管理</h2>
+        <p class="subtitle">代表的なサービスをカテゴリごとに整理。必要に応じて追加・更新できます。</p>
+
+        <div class="form-row">
+          <input id="service-name" type="text" placeholder="サービス名 (例: ChatGPT)">
+          <select id="service-category">
+            <option value="">カテゴリ</option>
+            <option>生成AI/チャット</option>
+            <option>検索/リサーチ</option>
+            <option>画像/動画</option>
+            <option>開発支援</option>
+            <option>ビジネス/業務効率</option>
+          </select>
+          <input id="service-url" type="url" placeholder="公式URL">
+        </div>
+        <div class="form-row">
+          <input id="service-tags" type="text" placeholder="タグ (カンマ区切り)">
+          <input id="service-owner" type="text" placeholder="提供企業 (例: OpenAI)">
+        </div>
+        <textarea id="service-notes" placeholder="特徴や注目ポイント"></textarea>
+        <div class="service-actions" style="margin-top: 10px;">
+          <button id="add-service">カードを追加</button>
+          <button id="reset-service" class="secondary">初期カードに戻す</button>
+        </div>
+
+        <hr style="margin:16px 0;border:0;border-top:1px solid var(--border);">
+
+        <div class="form-row">
+          <input id="search-input" type="text" placeholder="キーワードで検索">
+          <select id="category-filter">
+            <option value="all">すべてのカテゴリ</option>
+          </select>
+        </div>
+
+        <div id="service-list" class="card-grid"></div>
+      </div>
+
+      <div class="panel">
+        <h2>AIニュースの毎日受信</h2>
+        <p class="subtitle">サービス発表、テック企業の動き、関連記事を毎朝まとめてチェック。</p>
+        <div class="status-row">
+          <span class="pill" id="last-updated">最終更新: --</span>
+          <span class="pill" id="news-status">未取得</span>
+        </div>
+        <div class="news-actions" style="margin: 12px 0 0;">
+          <button id="refresh-news">ニュースを更新</button>
+          <a href="news.html">詳細ニュース一覧へ</a>
+        </div>
+
+        <div id="news-list" class="news-list" style="margin-top: 12px;"></div>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-top: 20px;">
+      <div class="panel">
+        <h2>今日のキャッチアップルーティン</h2>
+        <p class="subtitle">毎日受信するための流れをチェックリスト化。</p>
+        <div class="status-row">
+          <span class="tag">07:30</span> 重要ニュースのヘッドライン確認
+        </div>
+        <div class="status-row">
+          <span class="tag">09:00</span> 社内共有メモへ要約を転記
+        </div>
+        <div class="status-row">
+          <span class="tag">17:00</span> 主要サービスのアップデート確認
+        </div>
+      </div>
+      <div class="panel">
+        <h2>注目トピックのメモ</h2>
+        <p class="subtitle">次の調査テーマや社内共有事項を書き留めておく欄。</p>
+        <textarea id="daily-note" placeholder="例: Gemini 2.0 の導入事例を調査"></textarea>
+        <div class="service-actions" style="margin-top: 10px;">
+          <button id="save-note">メモを保存</button>
+          <button id="clear-note" class="secondary">メモをクリア</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>AI Catchup v3 - 毎日のAI情報整理を加速。</footer>
+  </main>
+
+  <script>
+    const defaultCards = [
+      {
+        name: "ChatGPT",
+        category: "生成AI/チャット",
+        url: "https://chat.openai.com",
+        tags: ["対話", "文章", "API"],
+        owner: "OpenAI",
+        notes: "マルチモーダル対応。社内FAQや資料作成で活躍。",
+        favorite: true,
+      },
+      {
+        name: "Claude",
+        category: "生成AI/チャット",
+        url: "https://claude.ai",
+        tags: ["長文", "安全性"],
+        owner: "Anthropic",
+        notes: "長文ドキュメント解析に強い。",
+        favorite: false,
+      },
+      {
+        name: "Perplexity",
+        category: "検索/リサーチ",
+        url: "https://www.perplexity.ai",
+        tags: ["検索", "引用"],
+        owner: "Perplexity",
+        notes: "最新ニュースの出典を提示して調査可能。",
+        favorite: true,
+      },
+      {
+        name: "Midjourney",
+        category: "画像/動画",
+        url: "https://www.midjourney.com",
+        tags: ["画像生成", "クリエイティブ"],
+        owner: "Midjourney",
+        notes: "ハイエンドなビジュアル制作に活用。",
+        favorite: false,
+      },
+      {
+        name: "GitHub Copilot",
+        category: "開発支援",
+        url: "https://github.com/features/copilot",
+        tags: ["コード", "IDE"],
+        owner: "GitHub",
+        notes: "日々の開発での生産性向上に効果。",
+        favorite: false,
+      },
+    ];
+
+    const storageKey = "aiCatchupCards";
+    const noteKey = "aiCatchupNote";
+
+    const serviceList = document.getElementById("service-list");
+    const categoryFilter = document.getElementById("category-filter");
+    const searchInput = document.getElementById("search-input");
+
+    function loadCards() {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return defaultCards;
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : defaultCards;
+      } catch {
+        return defaultCards;
+      }
+    }
+
+    function saveCards(cards) {
+      localStorage.setItem(storageKey, JSON.stringify(cards));
+    }
+
+    function updateCategoryOptions(cards) {
+      const categories = Array.from(new Set(cards.map((c) => c.category))).filter(Boolean);
+      categoryFilter.innerHTML = '<option value="all">すべてのカテゴリ</option>';
+      categories.forEach((cat) => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        categoryFilter.appendChild(opt);
+      });
+    }
+
+    function renderCards(cards) {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const category = categoryFilter.value;
+
+      const filtered = cards.filter((card) => {
+        const matchCategory = category === "all" || card.category === category;
+        const matchKeyword = !keyword ||
+          card.name.toLowerCase().includes(keyword) ||
+          card.tags.join(" ").toLowerCase().includes(keyword) ||
+          card.notes.toLowerCase().includes(keyword);
+        return matchCategory && matchKeyword;
+      });
+
+      serviceList.innerHTML = "";
+
+      if (filtered.length === 0) {
+        serviceList.innerHTML = "<p style=\"color:var(--muted);\">該当するカードがありません。</p>";
+        return;
+      }
+
+      filtered.forEach((card, index) => {
+        const wrapper = document.createElement("article");
+        wrapper.className = "service-card";
+        wrapper.innerHTML = `
+          <header>
+            <h3>${escapeHtml(card.name)}</h3>
+            <div>${card.category ? `<span class="tag">${escapeHtml(card.category)}</span>` : ""}
+            ${card.owner ? `<span class="tag">${escapeHtml(card.owner)}</span>` : ""}</div>
+          </header>
+          <p class="subtitle">${escapeHtml(card.notes)}</p>
+          <div>${card.tags.map((tag) => `<span class="tag">#${escapeHtml(tag)}</span>`).join(" ")}</div>
+          <div class="service-actions">
+            <a href="${card.url}" target="_blank" rel="noopener noreferrer">公式サイト</a>
+            <button data-action="favorite" data-index="${index}">${card.favorite ? "★ ピン留め解除" : "☆ ピン留め"}</button>
+            <button class="secondary" data-action="remove" data-index="${index}">削除</button>
+          </div>
+        `;
+        serviceList.appendChild(wrapper);
+      });
+    }
+
+    function refreshCards() {
+      const cards = loadCards();
+      cards.sort((a, b) => Number(b.favorite) - Number(a.favorite));
+      updateCategoryOptions(cards);
+      renderCards(cards);
+    }
+
+    document.getElementById("add-service").addEventListener("click", () => {
+      const name = document.getElementById("service-name").value.trim();
+      const category = document.getElementById("service-category").value.trim();
+      const url = document.getElementById("service-url").value.trim();
+      const tags = document.getElementById("service-tags").value
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const owner = document.getElementById("service-owner").value.trim();
+      const notes = document.getElementById("service-notes").value.trim();
+
+      if (!name || !category || !url) {
+        alert("サービス名・カテゴリ・URLは必須です。");
+        return;
+      }
+
+      const cards = loadCards();
+      cards.unshift({ name, category, url, tags, owner, notes, favorite: false });
+      saveCards(cards);
+      refreshCards();
+
+      document.getElementById("service-name").value = "";
+      document.getElementById("service-category").value = "";
+      document.getElementById("service-url").value = "";
+      document.getElementById("service-tags").value = "";
+      document.getElementById("service-owner").value = "";
+      document.getElementById("service-notes").value = "";
+    });
+
+    document.getElementById("reset-service").addEventListener("click", () => {
+      if (!confirm("初期カードに戻しますか？")) return;
+      saveCards(defaultCards);
+      refreshCards();
+    });
+
+    serviceList.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const index = Number(target.dataset.index);
+      if (Number.isNaN(index)) return;
+
+      const cards = loadCards();
+      if (!cards[index]) return;
+
+      if (target.dataset.action === "favorite") {
+        cards[index].favorite = !cards[index].favorite;
+      }
+      if (target.dataset.action === "remove") {
+        cards.splice(index, 1);
+      }
+      saveCards(cards);
+      refreshCards();
+    });
+
+    categoryFilter.addEventListener("change", refreshCards);
+    searchInput.addEventListener("input", refreshCards);
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    const newsList = document.getElementById("news-list");
+    const newsStatus = document.getElementById("news-status");
+    const lastUpdated = document.getElementById("last-updated");
+
+    async function loadNews() {
+      newsStatus.textContent = "取得中...";
+      newsList.innerHTML = "<p style=\"color:var(--muted);\">最新ニュースを取得しています...</p>";
+      try {
+        const res = await fetch("/api/news");
+        if (!res.ok) throw new Error("News API error");
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          newsList.innerHTML = "<p style=\"color:var(--muted);\">今日のニュースが見つかりませんでした。</p>";
+          newsStatus.textContent = "0件";
+          return;
+        }
+
+        newsStatus.textContent = `${data.length}件`;
+        lastUpdated.textContent = `最終更新: ${new Date().toLocaleString()}`;
+        const top = data.slice(0, 5);
+        newsList.innerHTML = top
+          .map(
+            (item) => `
+            <article class="news-item">
+              <h4>${escapeHtml(item.title)}</h4>
+              <p>${escapeHtml(item.summary || "")}</p>
+              <div class="news-actions">
+                <span class="tag">${escapeHtml(item.source || "")}</span>
+                <a href="${item.url}" target="_blank" rel="noopener noreferrer">記事を開く</a>
+              </div>
+            </article>
+          `
+          )
+          .join("");
+      } catch (err) {
+        console.error(err);
+        newsStatus.textContent = "失敗";
+        newsList.innerHTML = "<p style=\"color:var(--muted);\">ニュース取得に失敗しました。時間をおいて再度お試しください。</p>";
+      }
+    }
+
+    document.getElementById("refresh-news").addEventListener("click", loadNews);
+
+    const dailyNote = document.getElementById("daily-note");
+    dailyNote.value = localStorage.getItem(noteKey) || "";
+
+    document.getElementById("save-note").addEventListener("click", () => {
+      localStorage.setItem(noteKey, dailyNote.value.trim());
+      alert("メモを保存しました。");
+    });
+
+    document.getElementById("clear-note").addEventListener("click", () => {
+      dailyNote.value = "";
+      localStorage.removeItem(noteKey);
+    });
+
+    refreshCards();
+    loadNews();
+  </script>
+</body>
+</html>

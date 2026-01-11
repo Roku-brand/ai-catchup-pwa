@@ -3,19 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>AIニュース | AI Catch-up Dashboard</title>
+  <title>AIニュース | AI Catchup Dashboard</title>
   <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --ink: #1f2a44;
+      --muted: #5b6575;
+      --accent: #3d6bff;
+      --accent-soft: #eef2ff;
+      --border: #e2e8f3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: "Segoe UI", "Hiragino Sans", sans-serif;
-      background: #f7f9fc;
+      background: var(--bg);
       margin: 0;
-      padding: 20px;
-      color: #333;
+      padding: 24px;
+      color: var(--ink);
     }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
     h1 {
       font-size: 22px;
-      margin-bottom: 10px;
+      margin: 0;
     }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 4px 0 0;
+    }
+
+    .link-back {
+      text-decoration: none;
+      color: var(--accent);
+      font-size: 13px;
+      background: var(--accent-soft);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
     .news-controls {
       display: flex;
       justify-content: flex-end;
@@ -24,26 +63,30 @@
       margin-bottom: 12px;
       font-size: 13px;
     }
+
     .news-card {
-      background: #fff;
+      background: var(--card);
       border-radius: 14px;
       padding: 14px 18px;
       margin-bottom: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
     }
+
     .news-tags .tag {
       display: inline-block;
       font-size: 10px;
       padding: 2px 8px;
       margin-right: 4px;
       border-radius: 999px;
-      background: #eef3ff;
-      color: #3f5bd8;
+      background: var(--accent-soft);
+      color: var(--accent);
     }
+
     .news-summary {
       font-size: 13px;
-      color: #555;
+      color: var(--muted);
     }
+
     .news-actions {
       display: flex;
       gap: 12px;
@@ -51,25 +94,36 @@
       margin-top: 6px;
       font-size: 12px;
     }
-    .news-actions button {
+
+    .news-actions button,
+    .news-actions a,
+    .news-controls button {
       border: none;
-      padding: 4px 10px;
+      padding: 6px 10px;
       border-radius: 999px;
       cursor: pointer;
-      background: #e5f0ff;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-decoration: none;
     }
+
     .news-full {
       margin-top: 6px;
       padding-top: 4px;
       font-size: 12px;
-      color: #444;
-      border-top: 1px solid #eee;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
     }
   </style>
 </head>
 <body>
-  <h1>AI NEWS FEED</h1>
-  <p>外部ニュースAPIからAI関連ニュースを取得して表示します。</p>
+  <header>
+    <div>
+      <h1>AI NEWS FEED</h1>
+      <p class="subtitle">サービス発表やテック企業の動きを毎日チェック。</p>
+    </div>
+    <a class="link-back" href="index.html">ダッシュボードへ戻る</a>
+  </header>
 
   <div class="news-controls">
     <label><input type="checkbox" id="auto-refresh-toggle"> 自動更新（5分ごと）</label>
@@ -79,7 +133,7 @@
   <div id="news-container"></div>
 
   <script>
-    const API_ENDPOINT = "https://ai-catchup-pwa.vercel.app/api/news";
+    const API_ENDPOINT = "/api/news";
     let autoRefreshTimer = null;
 
     async function loadNews(showLoading = true) {
@@ -154,7 +208,7 @@
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
+        .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
 
